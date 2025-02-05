@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-
+import { ArrowLeft } from 'lucide-react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 const LaunchToken = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -35,11 +36,14 @@ const LaunchToken = () => {
     console.log('Launching token with data:', formData);
   };
 
+  const navigate =useNavigate()
+
   return (
     <div className="min-h-screen bg-black text-white p-6 pt-20">
           
+          <h1 className='text-5xl text-blue-500 font-bold mt-[1%] text-center '>Launch Token</h1>
       <div className="max-w-4xl  mt-[5%] mx-auto">
-      <Button className='bg-[#ffffff] text-black mb-8 pl-[50px] pr-[50px] '>Tokens</Button>
+      <Button className=' text-white mb-8 pl-[50px] pr-[50px] ' onClick={() => navigate('/dashboard')}><ArrowLeft/>Tokens</Button>
         <Tabs defaultValue="launch" className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-zinc-900 mb-6">
             <TabsTrigger value="launch" className="data-[state=active]:bg-zinc-800">Launch Token</TabsTrigger>

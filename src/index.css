@@ -1,5 +1,4 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
-@import "tailwindcss";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,23 +7,34 @@
   :root {
     --background: 0 0% 0%;
     --foreground: 0 0% 100%;
+    --primary: 271 81% 56%;
+    --primary-hover: 271 91% 65%;
+    --accent: 328 91% 45%;
+    --accent-hover: 328 91% 55%;
     --card: 0 0% 3.9%;
     --card-foreground: 0 0% 100%;
     --popover: 0 0% 3.9%;
     --popover-foreground: 0 0% 100%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
     --secondary: 0 0% 14.9%;
     --secondary-foreground: 0 0% 100%;
     --muted: 0 0% 14.9%;
     --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 100%;
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
     --ring: 0 0% 83.1%;
+  }
+
+  body {
+    @apply bg-black text-white;
+    background-image: 
+      radial-gradient(circle at center, rgba(147, 51, 234, 0.15), transparent 25%),
+      linear-gradient(to bottom right, rgba(147, 51, 234, 0.1) 1px, transparent 1px),
+      linear-gradient(to bottom left, rgba(147, 51, 234, 0.1) 1px, transparent 1px);
+    background-size: 100% 100%, 30px 30px, 30px 30px;
+    background-position: center, center, center;
+    background-attachment: fixed;
   }
 }
 
@@ -32,9 +42,94 @@
   font-family: 'Space Mono', monospace;
 }
 
-body {
-  background-color: black;
-  color: white;
+@layer components {
+  .game-card {
+    @apply bg-zinc-900/90 backdrop-blur-sm border border-zinc-800 rounded-lg transition-all duration-300;
+  }
+  
+  .game-card:hover {
+    @apply border-purple-600/30 shadow-lg shadow-purple-600/20;
+    transform: translateY(-2px);
+  }
+
+  .stat-value {
+    @apply text-xl font-bold;
+    background: linear-gradient(to right, #9333ea, #db2777);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+  }
+
+  .battle-button {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-300 relative overflow-hidden;
+    background: linear-gradient(45deg, var(--primary), var(--accent));
+  }
+
+  .battle-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent
+    );
+    transition: 0.5s;
+  }
+
+  .battle-button:hover::before {
+    left: 100%;
+  }
+
+  .leaderboard-row {
+    @apply border-b border-zinc-800 transition-all duration-300;
+  }
+
+  .leaderboard-row:hover {
+    @apply bg-zinc-800/50 backdrop-blur-sm;
+  }
+
+  .nav-link {
+    @apply text-zinc-400 hover:text-white transition-colors duration-300;
+  }
+
+  .active-nav-link {
+    @apply text-white font-medium;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .glass-effect {
+    @apply backdrop-blur-md bg-zinc-900/70 border border-zinc-800;
+    box-shadow: 0 8px 32px 0 rgba(147, 51, 234, 0.1);
+  }
+
+  .stat-card {
+    @apply relative overflow-hidden;
+  }
+
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 5px;
+    height: 100%;
+    background: linear-gradient(to bottom, var(--primary), var(--accent));
+    opacity: 0.5;
+  }
 }
 
 @layer utilities {
@@ -47,5 +142,100 @@ body {
     0% { background-position: 0% center; }
     50% { background-position: 100% center; }
     100% { background-position: 0% center; }
+  }
+
+  /* Neon effects */
+  .neon-text {
+    text-shadow: 0 0 5px #9333ea,
+                 0 0 10px #9333ea,
+                 0 0 20px #9333ea;
+  }
+
+  .neon-border {
+    box-shadow: 0 0 5px #9333ea,
+                inset 0 0 5px #9333ea;
+  }
+
+  /* Cyber button */
+  .cyber-button {
+    position: relative;
+    background: linear-gradient(45deg, #9333ea, #db2777);
+    border: none;
+    color: white;
+    padding: 12px 24px;
+    font-weight: bold;
+    clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+    transition: all 0.3s ease;
+  }
+
+  .cyber-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(147, 51, 234, 0.5);
+  }
+
+  .cyber-button::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    background: linear-gradient(45deg, #9333ea, #db2777);
+    clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+    z-index: -1;
+  }
+
+  /* TradingView Widget Styles */
+  .tradingview-widget-container {
+    height: 100%;
+    width: 100%;
+  }
+
+  .tradingview-widget-container__widget {
+    height: 100%;
+    width: 100%;
+    background-color: transparent;
+  }
+
+  /* Override TradingView default styles */
+  iframe {
+    background-color: transparent !important;
+  }
+
+  .chart-page {
+    background-color: transparent !important;
+  }
+
+  /* Custom Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.5);
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.7);
+  }
+
+  /* Shimmer Animation */
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s infinite linear;
   }
 }

@@ -23,3 +23,25 @@
 .wkit-connected-button:hover {
   background-color: #27272a !important;
 }
+
+.wallet-adapter-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.wallet-adapter-button {
+  background: linear-gradient(to right, #22bee9, #ffffff) !important;
+  color: white !important;
+  font-weight: 500 !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 1 rem !important;
+  transition: opacity 0.3s !important;
+}
+
+.wallet-adapter-button:hover {
+  opacity: 0.9 !important;
+}
+
+.wallet-adapter-button:not(:disabled):hover {
+  background: linear-gradient(to right, #03aeed, #f8f8f8) !important;
+}
