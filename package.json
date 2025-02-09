@@ -19,6 +19,8 @@
     "@radix-ui/react-slot": "^1.1.1",
     "@radix-ui/react-tabs": "^1.1.2",
     "@suiet/wallet-kit": "^0.3.4",
+    "atoma-sdk": "^0.1.0",
+    "axios": "^1.7.9",
     "canvas-confetti": "^1.9.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

@@ -1,4 +1,4 @@
-#[allow(duplicate_alias,unused_field)]
+#[allow(duplicate_alias,unused_field,unused_const,unused_variable)]
 
 module rift_token::rift_token {
     use std::option;
@@ -12,6 +12,7 @@ module rift_token::rift_token {
     use sui::clock::{Self, Clock};
     use sui::event;
     use std::vector;
+    use std::string;
 
     /// The type identifier of Rift coin
     public struct RIFT_TOKEN has drop {}
@@ -19,6 +20,16 @@ module rift_token::rift_token {
     /// Capability that grants permission to mint and burn Rift tokens
     public struct AdminCap has key, store { 
         id: UID 
+    }
+
+    /// Token metadata
+    public struct TokenMetadata has key {
+        id: UID,
+        name: String,
+        symbol: String,
+        description: String,
+        icon_url: String,
+        decimals: u8
     }
 
     /// Main liquidity pool for Rift tokens
@@ -34,7 +45,8 @@ module rift_token::rift_token {
         id: UID,
         total_staked: Balance<RIFT_TOKEN>,
         rewards_per_day: u64,
-        last_reward_time: u64
+        last_reward_time: u64,
+        reward_balance: Balance<RIFT_TOKEN>
     }
 
     /// Staking position for a user
@@ -76,7 +88,8 @@ module rift_token::rift_token {
 
     public struct BetPlacedEvent has copy, drop {
         player: address,
-        amount: u64
+        amount: u64,
+        timestamp: u64
     }
 
     // Error codes
@@ -87,22 +100,31 @@ module rift_token::rift_token {
     const ERR_INSUFFICIENT_POOL_BALANCE: u64 = 4;
 
     // Constants
-    const CREATOR_ALLOCATION: u64 = 20_000_000_000; // 2% of total supply
-    const POOL_ALLOCATION: u64 = 980_000_000_000; // 98% of total supply
     const DECIMALS: u8 = 9;
+    const TOTAL_SUPPLY: u64 = 1_000_000_000_000_000_000; // 1 billion tokens
+    const CREATOR_ALLOCATION: u64 = 20_000_000_000_000_000; // 2% of total supply
+    const LIQUIDITY_POOL_ALLOCATION: u64 = 950_000_000_000_000_000; // 95% for liquidity
+    const STAKING_POOL_ALLOCATION: u64 = 20_000_000_000_000_000; // 2% for staking rewards
+    const BETTING_POOL_ALLOCATION: u64 = 10_000_000_000_000_000; // 1% for initial betting pool
+
     const DAILY_REWARDS_RATE: u64 = 1_000_000; // 1 RIFT per day per staked token
     const MIN_STAKE_DURATION: u64 = 86400; // 24 hours in seconds
     const RIFT_PRICE_IN_SUI: u64 = 10_000_000; // 0.01 SUI per RIFT
 
-    fun init(witness: RIFT_TOKEN, ctx: &mut TxContext) {
-        // Create the Rift coin with metadata and image
-        let (mut treasury_cap, metadata) = coin::create_currency(
-            witness,
-            DECIMALS,
-            b"RIFT",
-            b"Rift Token",
-            b"The native token of the Rift ecosystem - A revolutionary gaming and DeFi token",
-            option::some(url::new_unsafe_from_bytes(b"https://rifttoken.com/logo.png")), // Replace with actual token image URL
+    const WIN_MULTIPLIER: u64 = 2; // 2x for winning
+    const LOSS_BURN_PERCENTAGE: u64 = 50; // 50% burned on loss
+    const LOSS_POOL_PERCENTAGE: u64 = 50; // 50% to pool on loss
+
+    /// Initialize token with metadata
+    fun init(ctx: &mut TxContext) {
+        // Create the Rift token with proper metadata
+        let (treasury_cap, metadata) = coin::create_currency<RIFT_TOKEN>(
+            RIFT_TOKEN {},
+            DECIMALS, // decimals
+            b"RIFT", // symbol
+            b"Rift Token", // name
+            b"Official token for the Rift gaming platform", // description
+            option::some(url::new_unsafe_from_bytes(b"https://harlequin-imperial-armadillo-412.mypinata.cloud/ipfs/bafkreih4mag7tt75x3lxxcgg6tx5wsitcdypqti3fvmdq6kyypcb5fieoy")), // icon URL
             ctx
         );
 
@@ -113,38 +135,31 @@ module rift_token::rift_token {
             id: object::new(ctx)
         };
 
-        // Initial token distribution
-        // Mint creator allocation (2%)
+        // Mint and distribute initial allocations
         let creator_coins = coin::mint(&mut treasury_cap, CREATOR_ALLOCATION, ctx);
-        transfer::public_transfer(creator_coins, creator);
+        let liquidity_coins = coin::mint(&mut treasury_cap, LIQUIDITY_POOL_ALLOCATION, ctx);
+        let staking_coins = coin::mint(&mut treasury_cap, STAKING_POOL_ALLOCATION, ctx);
+        let betting_coins = coin::mint(&mut treasury_cap, BETTING_POOL_ALLOCATION, ctx);
 
-        // Mint pool allocation (98%)
-        let pool_coins = coin::mint(&mut treasury_cap, POOL_ALLOCATION, ctx);
-        let pool_balance = coin::into_balance(pool_coins);
-
-        // Create liquidity pool with treasury cap
-        let mut liquidity_pool = LiquidityPool {
+        // Create and initialize pools
+        let liquidity_pool = LiquidityPool {
             id: object::new(ctx),
-            pool_balance: balance::zero(),
+            pool_balance: coin::into_balance(liquidity_coins),
             sui_balance: balance::zero(),
             treasury_cap
         };
 
-        // Add initial pool balance
-        balance::join(&mut liquidity_pool.pool_balance, pool_balance);
-
-        // Create staking pool
         let staking_pool = StakingPool {
             id: object::new(ctx),
             total_staked: balance::zero(),
             rewards_per_day: DAILY_REWARDS_RATE,
-            last_reward_time: 0
+            last_reward_time: 0,
+            reward_balance: coin::into_balance(staking_coins)
         };
 
-        // Create betting pool
         let betting_pool = BettingPool {
             id: object::new(ctx),
-            pool_balance: balance::zero(),
+            pool_balance: coin::into_balance(betting_coins),
             burn_address: creator
         };
 
@@ -154,12 +169,13 @@ module rift_token::rift_token {
             authorized_games: vector::empty()
         };
 
-        // Transfer the created objects
+        // Transfer everything
         transfer::public_freeze_object(metadata);
         transfer::public_share_object(liquidity_pool);
         transfer::public_share_object(staking_pool);
         transfer::public_share_object(betting_pool);
         transfer::public_share_object(game_registry);
+        transfer::public_transfer(creator_coins, creator);
         transfer::public_transfer(admin_cap, creator);
     }
 
@@ -270,47 +286,52 @@ module rift_token::rift_token {
         });
     }
 
-    // Place bet for games
+    // Place bet function - no game registration needed
     public entry fun place_bet(
         pool: &mut BettingPool,
-        rift_coins: Coin<RIFT_TOKEN>,
+        bet_amount: Coin<RIFT_TOKEN>,
         ctx: &mut TxContext
     ) {
-        let amount = coin::value(&rift_coins);
-        assert!(amount > 0, ERR_INVALID_BET_AMOUNT);
-
-        // Transfer bet amount to pool
-        balance::join(&mut pool.pool_balance, coin::into_balance(rift_coins));
-
+        let amount = coin::value(&bet_amount);
+        balance::join(&mut pool.pool_balance, coin::into_balance(bet_amount));
+        
         // Emit bet placed event
         event::emit(BetPlacedEvent {
             player: tx_context::sender(ctx),
-            amount
+            amount,
+            timestamp: tx_context::epoch(ctx)
         });
     }
 
-    // Process game result (called by authorized game contracts only)
+    // Process game result
     public entry fun process_game_result(
-        registry: &GameRegistry,
         pool: &mut BettingPool,
         player: address,
-        won: bool,
         bet_amount: u64,
+        won: bool,
         ctx: &mut TxContext
     ) {
-        // Verify the caller is an authorized game
-        let caller = tx_context::sender(ctx);
-        assert!(vector::contains(&registry.authorized_games, &caller), ERR_UNAUTHORIZED_GAME);
-
         if (won) {
-            // Player won - transfer winnings
-            let winning_coins = coin::from_balance(balance::split(&mut pool.pool_balance, bet_amount * 2), ctx);
-            transfer::public_transfer(winning_coins, player);
+            // Winner gets 2x their bet
+            let reward_amount = bet_amount * WIN_MULTIPLIER;
+            let reward = coin::from_balance(
+                balance::split(&mut pool.pool_balance, reward_amount),
+                ctx
+            );
+            transfer::public_transfer(reward, player);
         } else {
-            // Player lost - burn 50% and add 50% to pool
-            let lost_amount = bet_amount / 2;
-            let burn_coins = coin::from_balance(balance::split(&mut pool.pool_balance, lost_amount), ctx);
+            // On loss: 50% burned, 50% to pool
+            let burn_amount = (bet_amount * LOSS_BURN_PERCENTAGE) / 100;
+            let pool_amount = bet_amount - burn_amount;
+            
+            // Burn tokens
+            let burn_coins = coin::from_balance(
+                balance::split(&mut pool.pool_balance, burn_amount),
+                ctx
+            );
             transfer::public_transfer(burn_coins, pool.burn_address);
+            
+            // Rest stays in pool automatically
         }
     }
 
@@ -334,4 +355,6 @@ module rift_token::rift_token {
             coin::from_balance(balance::split(&mut pool.pool_balance, burn_amount), ctx)
         );
     }
+
+  
 }
