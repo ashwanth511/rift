@@ -11,6 +11,7 @@ import GamePage from './Pages/GamePage';
 import TicTacToe from './Pages/TicTacToe';
 import MemoryGame from './Pages/MemoryGame';
 import CyberBattle from './Pages/CyberBattle';
+import Trading from './Pages/Trading';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         <Route path="/tictactoe" element={<TicTacToe />} />
         <Route path="/memory" element={<MemoryGame />} />
         <Route path="/cyberbattle" element={<CyberBattle />} />
+        <Route path="/trading" element={<Trading />} />
         <Route path="/token-view/:id" element={<TokenView />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

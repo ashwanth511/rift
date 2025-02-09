@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { FaHome, FaGamepad, FaCoins, FaExchangeAlt } from 'react-icons/fa';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -50,6 +51,12 @@ const Navbar = () => {
                 className="text-zinc-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 Game
+              </button>
+              <button 
+                onClick={() => navigate('/trading')}
+                className="text-zinc-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Trading
               </button>
 
             </div>
