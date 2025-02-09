@@ -92,6 +92,20 @@ const GamePage = () => {
       type: 'quest',
       difficulty: 'medium',
       timeEstimate: '10-15 min'
+    },
+    {
+      id: '6',
+      title: 'Cyber Battle',
+      description: 'Engage in strategic combat using cyber abilities against an intelligent AI opponent',
+      image: '/games/battle.jpg',
+      rewards: {
+        xp: 500,
+        tokens: 150,
+        items: ['Battle Master Badge', 'Cyber Armor', 'Energy Core']
+      },
+      type: 'battle',
+      difficulty: 'medium',
+      timeEstimate: '10-15 min'
     }
   ];
 
@@ -223,6 +237,7 @@ const GamePage = () => {
                   onClick={() => {
                     if (game.id === '4') navigate('/tictactoe');
                     else if (game.id === '5') navigate('/memory');
+                    else if (game.id === '6') navigate('/cyberbattle');
                   }}
                   className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-400 rounded-lg font-bold text-white transform transition-all duration-300 hover:scale-[1.02] hover:from-purple-500 hover:to-purple-300"
                 >
