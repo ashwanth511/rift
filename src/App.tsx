@@ -8,6 +8,8 @@ import Profile from './Pages/Profile';
 import Battle from './Pages/Battle';
 import TokenView from './Pages/TokenView';
 import GamePage from './Pages/GamePage';
+import TicTacToe from './Pages/TicTacToe';
+import MemoryGame from './Pages/MemoryGame';
 
 function App() {
   return (
@@ -20,6 +22,8 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/battle" element={<Battle />} />
         <Route path="/game" element={<GamePage />} />
+        <Route path="/tictactoe" element={<TicTacToe />} />
+        <Route path="/memory" element={<MemoryGame />} />
         <Route path="/token-view/:id" element={<TokenView />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

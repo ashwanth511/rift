@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 interface Game {
   id: string;
@@ -19,6 +20,7 @@ interface Game {
 const GamePage = () => {
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'battle' | 'quest' | 'tournament'>('all');
   const [hoveredGame, setHoveredGame] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const games: Game[] = [
     {
@@ -62,6 +64,34 @@ const GamePage = () => {
       type: 'tournament',
       difficulty: 'hard',
       timeEstimate: '30-45 min'
+    },
+    {
+      id: '4',
+      title: 'Cyber Tic-Tac-Toe',
+      description: 'Classic game reinvented for the digital age. Challenge your strategic thinking!',
+      image: '/games/tictactoe.jpg',
+      rewards: {
+        xp: 200,
+        tokens: 50,
+        items: ['Strategic Mind Badge']
+      },
+      type: 'battle',
+      difficulty: 'easy',
+      timeEstimate: '5-10 min'
+    },
+    {
+      id: '5',
+      title: 'Cyber Memory',
+      description: 'Test your memory skills by matching cyber symbols in this engaging puzzle game',
+      image: '/games/memory.jpg',
+      rewards: {
+        xp: 300,
+        tokens: 75,
+        items: ['Memory Master Badge', 'Focus Boost']
+      },
+      type: 'quest',
+      difficulty: 'medium',
+      timeEstimate: '10-15 min'
     }
   ];
 
@@ -189,7 +219,13 @@ const GamePage = () => {
                 </div>
 
                 {/* Play Button */}
-                <button className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-400 rounded-lg font-bold text-white transform transition-all duration-300 hover:scale-[1.02] hover:from-purple-500 hover:to-purple-300">
+                <button 
+                  onClick={() => {
+                    if (game.id === '4') navigate('/tictactoe');
+                    else if (game.id === '5') navigate('/memory');
+                  }}
+                  className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-400 rounded-lg font-bold text-white transform transition-all duration-300 hover:scale-[1.02] hover:from-purple-500 hover:to-purple-300"
+                >
                   Play Now
                 </button>
               </div>
