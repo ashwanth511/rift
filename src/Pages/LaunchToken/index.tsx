@@ -10,6 +10,8 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { generateImages } from '@/lib/replicate';
+import { useWallet } from '@suiet/wallet-kit';
+import { suiService } from '@/lib/sui';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -28,6 +30,7 @@ const LaunchToken = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const navigate = useNavigate();
+  const wallet = useWallet();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -36,8 +39,16 @@ const LaunchToken = () => {
     agentPersonality: '',
     battleStyle: '',
     specialAbility: '',
-    background: ''
+    background: '',
+    imageUrl: '',
+    createAgent: true
   });
+
+  useEffect(() => {
+    if (wallet.connected) {
+      suiService.setWallet(wallet);
+    }
+  }, [wallet.connected]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
@@ -54,41 +65,23 @@ const LaunchToken = () => {
     try {
       setIsCreating(true);
       
-      // 1. Generate image using Replicate
-      const { nftImage } = await generateImages(formData.description);
+      // First create NFT
+      const tx = await suiService.mintNFT(
+        formData.name,
+        formData.description,
+        formData.imageUrl
+      );
 
-      // 2. Store NFT data in database
-      const nftData = {
-        name: formData.name,
-        description: formData.description,
-        imageUrl: nftImage,
-        agentType: formData.agentType,
-        agentPersonality: formData.agentPersonality,
-        battleStyle: formData.battleStyle,
-        specialAbility: formData.specialAbility,
-        background: formData.background
-      };
-      const dbResponse = await axios.post('/api/nfts', nftData);
+      // Then create agent if needed
+      if (formData.createAgent) {
+        await createAgent(formData);
+      }
 
-      // 3. Mint NFT using Sui contract
-      const mintTx = await window.suiWallet.executeMoveCall({
-        packageObjectId: import.meta.env.VITE_RIFT_PACKAGE_ID,
-        module: 'rift_nft',
-        function: 'mint',
-        typeArguments: [],
-        arguments: [
-          formData.name,
-          formData.description,
-          nftImage // URL for the NFT image
-        ],
-        gasBudget: 10000,
-      });
-
-      toast.success('NFT created successfully!');
-      navigate(`/token/${dbResponse.data.id}`);
+      toast.success('Successfully created NFT!');
+      navigate('/dashboard');
     } catch (error) {
       console.error('Error creating NFT:', error);
-      toast.error('Failed to create NFT. Please try again.');
+      toast.error('Failed to create NFT');
     } finally {
       setIsCreating(false);
     }

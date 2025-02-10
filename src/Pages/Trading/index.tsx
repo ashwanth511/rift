@@ -7,9 +7,12 @@ import { ArrowLeft, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useWallet } from '@suiet/wallet-kit';
+import { suiService } from '@/lib/sui';
 
 const Trading = () => {
   const navigate = useNavigate();
+  const wallet = useWallet();
   const [buyAmount, setBuyAmount] = useState('');
   const [sellAmount, setSellAmount] = useState('');
   const [riftPrice, setRiftPrice] = useState(0);
@@ -30,13 +33,41 @@ const Trading = () => {
     stake: false,
     unstake: false,
     price: true,
-    balance: true
+    balance: true,
+    claim: false
+  });
+  const [lendingData, setLendingData] = useState({
+    supplied: 0,
+    borrowed: 0,
+    availableToBorrow: 0,
+    healthFactor: 0
   });
 
   useEffect(() => {
-    fetchRiftPrice();
-    fetchWalletBalance();
-  }, []);
+    if (wallet.connected) {
+      suiService.setWallet(wallet);
+      fetchBalances();
+      fetchLendingData();
+    }
+  }, [wallet.connected]);
+
+  const fetchBalances = async () => {
+    try {
+      setIsLoading(prev => ({ ...prev, balance: true }));
+      const suiBalance = await suiService.getBalance(wallet.address!);
+      const riftBalance = await suiService.getRiftBalance(wallet.address!);
+      
+      setWalletBalance({
+        sui: Number(suiBalance.totalBalance) / 1e9,
+        rift: Number(riftBalance.totalBalance) / 1e9
+      });
+    } catch (error) {
+      console.error('Error fetching balances:', error);
+      toast.error('Failed to fetch balances');
+    } finally {
+      setIsLoading(prev => ({ ...prev, balance: false }));
+    }
+  };
 
   const fetchRiftPrice = async () => {
     try {
@@ -50,18 +81,18 @@ const Trading = () => {
     }
   };
 
-  const fetchWalletBalance = async () => {
+  const fetchLendingData = async () => {
     try {
-      // TODO: Implement balance fetching from Sui wallet
-      setWalletBalance({
-        sui: 100,
-        rift: 50
+      const data = await suiService.getUserLendingData(wallet.address!);
+      setLendingData({
+        supplied: Number(data.totalSupplied) / 1e9,
+        borrowed: Number(data.totalBorrowed) / 1e9,
+        availableToBorrow: Number(data.availableToBorrow) / 1e9,
+        healthFactor: Number(data.healthFactor)
       });
     } catch (error) {
-      console.error('Error fetching balance:', error);
-      toast.error('Failed to fetch wallet balance');
-    } finally {
-      setIsLoading(prev => ({ ...prev, balance: false }));
+      console.error('Error fetching lending data:', error);
+      toast.error('Failed to fetch lending data');
     }
   };
 
@@ -69,26 +100,15 @@ const Trading = () => {
     try {
       setIsLoading(prev => ({ ...prev, buy: true }));
       const amount = parseFloat(buyAmount);
-      if (isNaN(amount) || amount <= 0) {
-        throw new Error('Invalid amount');
-      }
+      if (isNaN(amount) || amount <= 0) throw new Error('Invalid amount');
 
-      // TODO: Implement buy transaction using Sui wallet
-      // const tx = await suiWallet.executeMoveCall({
-      //   packageObjectId: 'YOUR_PACKAGE_ID',
-      //   module: 'rift_token',
-      //   function: 'buy',
-      //   typeArguments: [],
-      //   arguments: [amount],
-      //   gasBudget: 10000,
-      // });
-
-      toast.success('Successfully bought Rift tokens!');
+      await suiService.buyRiftWithSui(amount * 1e9);
+      toast.success('Successfully bought RIFT tokens!');
       setBuyAmount('');
-      fetchWalletBalance();
+      fetchBalances();
     } catch (error) {
-      console.error('Error buying Rift:', error);
-      toast.error('Failed to buy Rift tokens');
+      console.error('Error buying RIFT:', error);
+      toast.error('Failed to buy RIFT tokens');
     } finally {
       setIsLoading(prev => ({ ...prev, buy: false }));
     }
@@ -98,26 +118,15 @@ const Trading = () => {
     try {
       setIsLoading(prev => ({ ...prev, sell: true }));
       const amount = parseFloat(sellAmount);
-      if (isNaN(amount) || amount <= 0) {
-        throw new Error('Invalid amount');
-      }
+      if (isNaN(amount) || amount <= 0) throw new Error('Invalid amount');
 
-      // TODO: Implement sell transaction using Sui wallet
-      // const tx = await suiWallet.executeMoveCall({
-      //   packageObjectId: 'YOUR_PACKAGE_ID',
-      //   module: 'rift_token',
-      //   function: 'sell',
-      //   typeArguments: [],
-      //   arguments: [amount],
-      //   gasBudget: 10000,
-      // });
-
-      toast.success('Successfully sold Rift tokens!');
+      await suiService.sellRiftForSui(amount * 1e9);
+      toast.success('Successfully sold RIFT tokens!');
       setSellAmount('');
-      fetchWalletBalance();
+      fetchBalances();
     } catch (error) {
-      console.error('Error selling Rift:', error);
-      toast.error('Failed to sell Rift tokens');
+      console.error('Error selling RIFT:', error);
+      toast.error('Failed to sell RIFT tokens');
     } finally {
       setIsLoading(prev => ({ ...prev, sell: false }));
     }
@@ -127,26 +136,15 @@ const Trading = () => {
     try {
       setIsLoading(prev => ({ ...prev, stake: true }));
       const amount = parseFloat(stakeAmount);
-      if (isNaN(amount) || amount <= 0) {
-        throw new Error('Invalid amount');
-      }
+      if (isNaN(amount) || amount <= 0) throw new Error('Invalid amount');
 
-      // TODO: Implement stake transaction using Sui wallet
-      // const tx = await suiWallet.executeMoveCall({
-      //   packageObjectId: 'YOUR_PACKAGE_ID',
-      //   module: 'rift_token',
-      //   function: 'stake',
-      //   typeArguments: [],
-      //   arguments: [amount],
-      //   gasBudget: 10000,
-      // });
-
-      toast.success('Successfully staked Rift tokens!');
+      await suiService.stakeRift(amount * 1e9);
+      toast.success('Successfully staked RIFT tokens!');
       setStakeAmount('');
-      fetchWalletBalance();
+      fetchBalances();
     } catch (error) {
-      console.error('Error staking Rift:', error);
-      toast.error('Failed to stake Rift tokens');
+      console.error('Error staking RIFT:', error);
+      toast.error('Failed to stake RIFT tokens');
     } finally {
       setIsLoading(prev => ({ ...prev, stake: false }));
     }
@@ -156,28 +154,49 @@ const Trading = () => {
     try {
       setIsLoading(prev => ({ ...prev, unstake: true }));
       const amount = parseFloat(unstakeAmount);
-      if (isNaN(amount) || amount <= 0) {
-        throw new Error('Invalid amount');
-      }
+      if (isNaN(amount) || amount <= 0) throw new Error('Invalid amount');
 
-      // TODO: Implement unstake transaction using Sui wallet
-      // const tx = await suiWallet.executeMoveCall({
-      //   packageObjectId: 'YOUR_PACKAGE_ID',
-      //   module: 'rift_token',
-      //   function: 'unstake',
-      //   typeArguments: [],
-      //   arguments: [amount],
-      //   gasBudget: 10000,
-      // });
-
-      toast.success('Successfully unstaked Rift tokens!');
+      await suiService.unstakeRift(amount * 1e9);
+      toast.success('Successfully unstaked RIFT tokens!');
       setUnstakeAmount('');
-      fetchWalletBalance();
+      fetchBalances();
     } catch (error) {
-      console.error('Error unstaking Rift:', error);
-      toast.error('Failed to unstake Rift tokens');
+      console.error('Error unstaking RIFT:', error);
+      toast.error('Failed to unstake RIFT tokens');
     } finally {
       setIsLoading(prev => ({ ...prev, unstake: false }));
+    }
+  };
+
+  const handleClaimRewards = async () => {
+    try {
+      setIsLoading(prev => ({ ...prev, claim: true }));
+      await suiService.claimStakingRewards();
+      toast.success('Successfully claimed rewards!');
+      fetchBalances();
+    } catch (error) {
+      console.error('Error claiming rewards:', error);
+      toast.error('Failed to claim rewards');
+    } finally {
+      setIsLoading(prev => ({ ...prev, claim: false }));
+    }
+  };
+
+  const handleSupply = async () => {
+    try {
+      setIsLoading(prev => ({ ...prev, supply: true }));
+      const amount = parseFloat(supplyAmount);
+      if (isNaN(amount) || amount <= 0) throw new Error('Invalid amount');
+
+      await suiService.supply(poolId, amount * 1e9);
+      toast.success('Successfully supplied RIFT tokens!');
+      setSupplyAmount('');
+      fetchLendingData();
+    } catch (error) {
+      console.error('Error supplying RIFT:', error);
+      toast.error('Failed to supply RIFT tokens');
+    } finally {
+      setIsLoading(prev => ({ ...prev, supply: false }));
     }
   };
 
@@ -221,6 +240,7 @@ const Trading = () => {
             <TabsTrigger value="buy" className="data-[state=active]:bg-zinc-800">Buy Rift</TabsTrigger>
             <TabsTrigger value="sell" className="data-[state=active]:bg-zinc-800">Sell Rift</TabsTrigger>
             <TabsTrigger value="stake" className="data-[state=active]:bg-zinc-800">Stake</TabsTrigger>
+            <TabsTrigger value="lend" className="data-[state=active]:bg-zinc-800">Lend</TabsTrigger>
           </TabsList>
 
           <TabsContent value="buy">
@@ -307,7 +327,16 @@ const Trading = () => {
                     </div>
                     <div>
                       <Label className="text-zinc-400">Rewards Earned</Label>
-                      <p className="text-2xl font-bold text-green-500">+{stakingInfo.rewardsEarned} RIFT</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-2xl font-bold text-green-500">+{stakingInfo.rewardsEarned} RIFT</p>
+                        <Button
+                          onClick={handleClaimRewards}
+                          disabled={isLoading.claim || stakingInfo.rewardsEarned === 0}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          {isLoading.claim ? 'Claiming...' : 'Claim Rewards'}
+                        </Button>
+                      </div>
                     </div>
                     <div>
                       <Label className="text-zinc-400">Current APR</Label>
@@ -382,6 +411,10 @@ const Trading = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="lend">
+            {/* Add lending UI here */}
           </TabsContent>
         </Tabs>
       </div>
