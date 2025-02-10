@@ -8,6 +8,25 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-    },
+    }
   },
+  define: {
+    'process.env': {},
+    global: 'globalThis'
+  },
+  optimizeDeps: {
+    include: ['atoma-sdk'],
+    exclude: ['blake2', '@mysten/sui.js']
+  },
+  build: {
+    commonjsOptions: {
+      transformMixedEsModules: true,
+      include: [/node_modules/]
+    }
+  },
+  server: {
+    fs: {
+      strict: false
+    }
+  }
 })

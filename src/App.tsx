@@ -12,10 +12,11 @@ import TicTacToe from './Pages/TicTacToe';
 import MemoryGame from './Pages/MemoryGame';
 import CyberBattle from './Pages/CyberBattle';
 import Trading from './Pages/Trading';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   return (
-    <>
+    <ErrorBoundary>
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -31,7 +32,7 @@ function App() {
         <Route path="/token-view/:id" element={<TokenView />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </>
+    </ErrorBoundary>
   );
 }
 

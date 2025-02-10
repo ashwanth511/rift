@@ -1,201 +1,389 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-
-type TradeType = 'buy' | 'swap';
-type Token = {
-  symbol: string;
-  name: string;
-  price: number;
-  icon: string;
-};
-
-const AVAILABLE_TOKENS: Token[] = [
-  { symbol: 'RIFT', name: 'Rift Token', price: 2.5, icon: '🌀' },
-  { symbol: 'ETH', name: 'Ethereum', price: 2500, icon: '⧫' },
-  { symbol: 'BTC', name: 'Bitcoin', price: 42000, icon: '₿' },
-  { symbol: 'USDT', name: 'Tether', price: 1, icon: '💵' },
-];
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Trading = () => {
-  const [tradeType, setTradeType] = useState<TradeType>('buy');
-  const [amount, setAmount] = useState<string>('');
-  const [selectedToken, setSelectedToken] = useState<Token>(AVAILABLE_TOKENS[0]);
-  const [swapToken, setSwapToken] = useState<Token>(AVAILABLE_TOKENS[1]);
+  const navigate = useNavigate();
+  const [buyAmount, setBuyAmount] = useState('');
+  const [sellAmount, setSellAmount] = useState('');
+  const [riftPrice, setRiftPrice] = useState(0);
+  const [walletBalance, setWalletBalance] = useState({
+    sui: 0,
+    rift: 0
+  });
+  const [stakeAmount, setStakeAmount] = useState('');
+  const [unstakeAmount, setUnstakeAmount] = useState('');
+  const [stakingInfo, setStakingInfo] = useState({
+    totalStaked: 0,
+    rewardsEarned: 0,
+    apr: 15 // Example APR percentage
+  });
+  const [isLoading, setIsLoading] = useState({
+    buy: false,
+    sell: false,
+    stake: false,
+    unstake: false,
+    price: true,
+    balance: true
+  });
 
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (/^\d*\.?\d*$/.test(value)) { // Allow only numbers and decimal point
-      setAmount(value);
+  useEffect(() => {
+    fetchRiftPrice();
+    fetchWalletBalance();
+  }, []);
+
+  const fetchRiftPrice = async () => {
+    try {
+      // TODO: Implement price fetching from your Sui contract
+      setRiftPrice(1.5); // Example price
+    } catch (error) {
+      console.error('Error fetching price:', error);
+      toast.error('Failed to fetch Rift price');
+    } finally {
+      setIsLoading(prev => ({ ...prev, price: false }));
     }
   };
 
-  const calculateTotal = () => {
-    const numAmount = parseFloat(amount) || 0;
-    if (tradeType === 'buy') {
-      return (numAmount * selectedToken.price).toFixed(2);
-    } else {
-      return ((numAmount * selectedToken.price) / swapToken.price).toFixed(6);
+  const fetchWalletBalance = async () => {
+    try {
+      // TODO: Implement balance fetching from Sui wallet
+      setWalletBalance({
+        sui: 100,
+        rift: 50
+      });
+    } catch (error) {
+      console.error('Error fetching balance:', error);
+      toast.error('Failed to fetch wallet balance');
+    } finally {
+      setIsLoading(prev => ({ ...prev, balance: false }));
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Here you would typically handle the actual transaction
-    alert(`Transaction submitted!\n${amount} ${selectedToken.symbol} ${tradeType === 'buy' ? 'purchased' : `swapped for ${calculateTotal()} ${swapToken.symbol}`}`);
-    setAmount('');
+  const handleBuyRift = async () => {
+    try {
+      setIsLoading(prev => ({ ...prev, buy: true }));
+      const amount = parseFloat(buyAmount);
+      if (isNaN(amount) || amount <= 0) {
+        throw new Error('Invalid amount');
+      }
+
+      // TODO: Implement buy transaction using Sui wallet
+      // const tx = await suiWallet.executeMoveCall({
+      //   packageObjectId: 'YOUR_PACKAGE_ID',
+      //   module: 'rift_token',
+      //   function: 'buy',
+      //   typeArguments: [],
+      //   arguments: [amount],
+      //   gasBudget: 10000,
+      // });
+
+      toast.success('Successfully bought Rift tokens!');
+      setBuyAmount('');
+      fetchWalletBalance();
+    } catch (error) {
+      console.error('Error buying Rift:', error);
+      toast.error('Failed to buy Rift tokens');
+    } finally {
+      setIsLoading(prev => ({ ...prev, buy: false }));
+    }
+  };
+
+  const handleSellRift = async () => {
+    try {
+      setIsLoading(prev => ({ ...prev, sell: true }));
+      const amount = parseFloat(sellAmount);
+      if (isNaN(amount) || amount <= 0) {
+        throw new Error('Invalid amount');
+      }
+
+      // TODO: Implement sell transaction using Sui wallet
+      // const tx = await suiWallet.executeMoveCall({
+      //   packageObjectId: 'YOUR_PACKAGE_ID',
+      //   module: 'rift_token',
+      //   function: 'sell',
+      //   typeArguments: [],
+      //   arguments: [amount],
+      //   gasBudget: 10000,
+      // });
+
+      toast.success('Successfully sold Rift tokens!');
+      setSellAmount('');
+      fetchWalletBalance();
+    } catch (error) {
+      console.error('Error selling Rift:', error);
+      toast.error('Failed to sell Rift tokens');
+    } finally {
+      setIsLoading(prev => ({ ...prev, sell: false }));
+    }
+  };
+
+  const handleStakeRift = async () => {
+    try {
+      setIsLoading(prev => ({ ...prev, stake: true }));
+      const amount = parseFloat(stakeAmount);
+      if (isNaN(amount) || amount <= 0) {
+        throw new Error('Invalid amount');
+      }
+
+      // TODO: Implement stake transaction using Sui wallet
+      // const tx = await suiWallet.executeMoveCall({
+      //   packageObjectId: 'YOUR_PACKAGE_ID',
+      //   module: 'rift_token',
+      //   function: 'stake',
+      //   typeArguments: [],
+      //   arguments: [amount],
+      //   gasBudget: 10000,
+      // });
+
+      toast.success('Successfully staked Rift tokens!');
+      setStakeAmount('');
+      fetchWalletBalance();
+    } catch (error) {
+      console.error('Error staking Rift:', error);
+      toast.error('Failed to stake Rift tokens');
+    } finally {
+      setIsLoading(prev => ({ ...prev, stake: false }));
+    }
+  };
+
+  const handleUnstakeRift = async () => {
+    try {
+      setIsLoading(prev => ({ ...prev, unstake: true }));
+      const amount = parseFloat(unstakeAmount);
+      if (isNaN(amount) || amount <= 0) {
+        throw new Error('Invalid amount');
+      }
+
+      // TODO: Implement unstake transaction using Sui wallet
+      // const tx = await suiWallet.executeMoveCall({
+      //   packageObjectId: 'YOUR_PACKAGE_ID',
+      //   module: 'rift_token',
+      //   function: 'unstake',
+      //   typeArguments: [],
+      //   arguments: [amount],
+      //   gasBudget: 10000,
+      // });
+
+      toast.success('Successfully unstaked Rift tokens!');
+      setUnstakeAmount('');
+      fetchWalletBalance();
+    } catch (error) {
+      console.error('Error unstaking Rift:', error);
+      toast.error('Failed to unstake Rift tokens');
+    } finally {
+      setIsLoading(prev => ({ ...prev, unstake: false }));
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-900 to-black p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="relative mb-8">
-          <div className="absolute inset-0 bg-purple-600/10 blur-3xl" />
-          <div className="relative">
-            <h1 className="text-4xl font-bold text-white mb-4">Trade Tokens</h1>
-            <p className="text-xl text-zinc-400">Buy and swap tokens in the digital realm</p>
-          </div>
-        </div>
+    <div className="min-h-screen bg-black text-white p-6 pt-20">
+      <h1 className='text-5xl text-blue-500 font-bold mt-[1%] text-center'>Trade Rift Tokens</h1>
+      <div className="max-w-4xl mt-[5%] mx-auto">
+        <Button className='text-white mb-8 pl-[50px] pr-[50px]' onClick={() => navigate('/dashboard')}>
+          <ArrowLeft/>Dashboard
+        </Button>
 
-        {/* Trade Type Selector */}
-        <div className="flex gap-4 mb-8">
-          {(['buy', 'swap'] as TradeType[]).map((type) => (
-            <motion.button
-              key={type}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setTradeType(type)}
-              className={`px-8 py-3 rounded-lg backdrop-blur-sm transition-all duration-300 font-bold
-                ${tradeType === type
-                  ? 'bg-purple-600/50 text-white'
-                  : 'bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700/50'
-                }`}
-            >
-              {type.charAt(0).toUpperCase() + type.slice(1)}
-            </motion.button>
-          ))}
-        </div>
-
-        {/* Trading Form */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-zinc-800/50 border border-zinc-700/50 backdrop-blur-sm rounded-lg p-6"
-        >
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Amount Input */}
-            <div>
-              <label className="block text-zinc-400 mb-2">Amount</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={amount}
-                  onChange={handleAmountChange}
-                  className="w-full bg-zinc-900/50 border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-purple-500"
-                  placeholder="0.00"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Token Selection */}
-            <div>
-              <label className="block text-zinc-400 mb-2">
-                {tradeType === 'buy' ? 'Token to Buy' : 'Token to Swap From'}
-              </label>
-              <div className="relative">
-                <select
-                  value={selectedToken.symbol}
-                  onChange={(e) => setSelectedToken(AVAILABLE_TOKENS.find(t => t.symbol === e.target.value)!)}
-                  className="w-full bg-zinc-900/50 border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-purple-500 appearance-none"
-                >
-                  {AVAILABLE_TOKENS.map((token) => (
-                    <option key={token.symbol} value={token.symbol}>
-                      {token.icon} {token.name} ({token.symbol})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Swap To Token (only for swap) */}
-            {tradeType === 'swap' && (
+        {/* Wallet Info */}
+        <Card className="bg-zinc-900 border-zinc-800 mb-6">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-zinc-400 mb-2">Token to Swap To</label>
-                <div className="relative">
-                  <select
-                    value={swapToken.symbol}
-                    onChange={(e) => setSwapToken(AVAILABLE_TOKENS.find(t => t.symbol === e.target.value)!)}
-                    className="w-full bg-zinc-900/50 border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-purple-500 appearance-none"
-                  >
-                    {AVAILABLE_TOKENS.filter(t => t.symbol !== selectedToken.symbol).map((token) => (
-                      <option key={token.symbol} value={token.symbol}>
-                        {token.icon} {token.name} ({token.symbol})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <Label className="text-zinc-400">Rift Price</Label>
+                <p className="text-2xl font-bold">
+                  {isLoading.price ? 'Loading...' : `${riftPrice} SUI`}
+                </p>
               </div>
-            )}
-
-            {/* Total */}
-            <div className="bg-zinc-900/30 rounded-lg p-4">
-              <div className="flex justify-between text-zinc-400">
-                <span>Total {tradeType === 'buy' ? 'Cost' : `${swapToken.symbol}`}</span>
-                <span className="text-white font-bold">
-                  {tradeType === 'buy' ? '$' : ''}{calculateTotal()}
-                  {tradeType === 'swap' ? ` ${swapToken.symbol}` : ''}
-                </span>
+              <div>
+                <Label className="text-zinc-400">SUI Balance</Label>
+                <p className="text-2xl font-bold">
+                  {isLoading.balance ? 'Loading...' : `${walletBalance.sui} SUI`}
+                </p>
               </div>
-              <div className="flex justify-between text-zinc-500 text-sm mt-2">
-                <span>Rate</span>
-                <span>
-                  1 {selectedToken.symbol} = {tradeType === 'buy' 
-                    ? `$${selectedToken.price}`
-                    : `${(selectedToken.price / swapToken.price).toFixed(6)} ${swapToken.symbol}`}
-                </span>
+              <div>
+                <Label className="text-zinc-400">Rift Balance</Label>
+                <p className="text-2xl font-bold">
+                  {isLoading.balance ? 'Loading...' : `${walletBalance.rift} RIFT`}
+                </p>
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            {/* Submit Button */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="submit"
-              className="w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-purple-400 rounded-lg font-bold text-white hover:from-purple-500 hover:to-purple-300 transition-all duration-300"
-            >
-              {tradeType === 'buy' ? 'Buy Tokens' : 'Swap Tokens'}
-            </motion.button>
-          </form>
-        </motion.div>
+        {/* Trading Interface */}
+        <Tabs defaultValue="buy" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 bg-zinc-900 mb-6">
+            <TabsTrigger value="buy" className="data-[state=active]:bg-zinc-800">Buy Rift</TabsTrigger>
+            <TabsTrigger value="sell" className="data-[state=active]:bg-zinc-800">Sell Rift</TabsTrigger>
+            <TabsTrigger value="stake" className="data-[state=active]:bg-zinc-800">Stake</TabsTrigger>
+          </TabsList>
 
-        {/* Market Info */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-zinc-800/50 border border-zinc-700/50 backdrop-blur-sm rounded-lg p-6">
-            <h3 className="text-lg font-bold text-white mb-4">Market Prices</h3>
-            <div className="space-y-4">
-              {AVAILABLE_TOKENS.map((token) => (
-                <div key={token.symbol} className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">{token.icon}</span>
-                    <span className="text-zinc-400">{token.symbol}</span>
+          <TabsContent value="buy">
+            <Card className="bg-zinc-900 border-zinc-800">
+              <CardContent className="p-6">
+                <form onSubmit={(e) => { e.preventDefault(); handleBuyRift(); }} className="space-y-6">
+                  <div className="space-y-2">
+                    <Label className="text-white">Amount to Buy (RIFT)</Label>
+                    <Input
+                      type="number"
+                      value={buyAmount}
+                      onChange={(e) => setBuyAmount(e.target.value)}
+                      placeholder="Enter amount"
+                      className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
+                      min="0"
+                      step="0.1"
+                    />
+                    {buyAmount && !isNaN(parseFloat(buyAmount)) && (
+                      <p className="text-sm text-zinc-400">
+                        Cost: {(parseFloat(buyAmount) * riftPrice).toFixed(2)} SUI
+                      </p>
+                    )}
                   </div>
-                  <span className="text-white font-bold">${token.price.toLocaleString()}</span>
-                </div>
-              ))}
-            </div>
-          </div>
 
-          <div className="bg-zinc-800/50 border border-zinc-700/50 backdrop-blur-sm rounded-lg p-6">
-            <h3 className="text-lg font-bold text-white mb-4">Trading Guide</h3>
-            <ul className="space-y-2 text-zinc-400">
-              <li>• Choose between buying or swapping tokens</li>
-              <li>• Enter the amount you want to trade</li>
-              <li>• Select your desired tokens</li>
-              <li>• Review the total and rate</li>
-              <li>• Confirm your transaction</li>
-            </ul>
-          </div>
-        </div>
+                  <Button
+                    type="submit"
+                    className="w-full bg-zinc-800 hover:bg-zinc-700 text-white"
+                    disabled={isLoading.buy || !buyAmount}
+                  >
+                    {isLoading.buy ? 'Processing...' : 'Buy Rift'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="sell">
+            <Card className="bg-zinc-900 border-zinc-800">
+              <CardContent className="p-6">
+                <form onSubmit={(e) => { e.preventDefault(); handleSellRift(); }} className="space-y-6">
+                  <div className="space-y-2">
+                    <Label className="text-white">Amount to Sell (RIFT)</Label>
+                    <Input
+                      type="number"
+                      value={sellAmount}
+                      onChange={(e) => setSellAmount(e.target.value)}
+                      placeholder="Enter amount"
+                      className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
+                      min="0"
+                      step="0.1"
+                    />
+                    {sellAmount && !isNaN(parseFloat(sellAmount)) && (
+                      <p className="text-sm text-zinc-400">
+                        You'll receive: {(parseFloat(sellAmount) * riftPrice).toFixed(2)} SUI
+                      </p>
+                    )}
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-zinc-800 hover:bg-zinc-700 text-white"
+                    disabled={isLoading.sell || !sellAmount}
+                  >
+                    {isLoading.sell ? 'Processing...' : 'Sell Rift'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="stake">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Staking Info Card */}
+              <Card className="bg-zinc-900 border-zinc-800">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-bold">Staking Overview</h3>
+                    <Clock className="text-blue-500" />
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-zinc-400">Total Staked</Label>
+                      <p className="text-2xl font-bold">{stakingInfo.totalStaked} RIFT</p>
+                    </div>
+                    <div>
+                      <Label className="text-zinc-400">Rewards Earned</Label>
+                      <p className="text-2xl font-bold text-green-500">+{stakingInfo.rewardsEarned} RIFT</p>
+                    </div>
+                    <div>
+                      <Label className="text-zinc-400">Current APR</Label>
+                      <p className="text-2xl font-bold text-blue-500">{stakingInfo.apr}%</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Stake/Unstake Actions Card */}
+              <Card className="bg-zinc-900 border-zinc-800">
+                <CardContent className="p-6">
+                  <Tabs defaultValue="stake-action" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 bg-zinc-800 mb-6">
+                      <TabsTrigger value="stake-action">Stake</TabsTrigger>
+                      <TabsTrigger value="unstake-action">Unstake</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="stake-action">
+                      <form onSubmit={(e) => { e.preventDefault(); handleStakeRift(); }} className="space-y-6">
+                        <div className="space-y-2">
+                          <Label className="text-white">Amount to Stake</Label>
+                          <Input
+                            type="number"
+                            value={stakeAmount}
+                            onChange={(e) => setStakeAmount(e.target.value)}
+                            placeholder="Enter amount"
+                            className="bg-zinc-800 border-zinc-700 text-white"
+                            min="0"
+                            step="0.1"
+                          />
+                          {stakeAmount && !isNaN(parseFloat(stakeAmount)) && (
+                            <p className="text-sm text-zinc-400">
+                              Estimated daily reward: {(parseFloat(stakeAmount) * (stakingInfo.apr/365/100)).toFixed(4)} RIFT
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          type="submit"
+                          className="w-full bg-blue-600 hover:bg-blue-700"
+                          disabled={isLoading.stake || !stakeAmount}
+                        >
+                          {isLoading.stake ? 'Processing...' : 'Stake RIFT'}
+                        </Button>
+                      </form>
+                    </TabsContent>
+
+                    <TabsContent value="unstake-action">
+                      <form onSubmit={(e) => { e.preventDefault(); handleUnstakeRift(); }} className="space-y-6">
+                        <div className="space-y-2">
+                          <Label className="text-white">Amount to Unstake</Label>
+                          <Input
+                            type="number"
+                            value={unstakeAmount}
+                            onChange={(e) => setUnstakeAmount(e.target.value)}
+                            placeholder="Enter amount"
+                            className="bg-zinc-800 border-zinc-700 text-white"
+                            min="0"
+                            step="0.1"
+                          />
+                        </div>
+                        <Button
+                          type="submit"
+                          className="w-full bg-zinc-800 hover:bg-zinc-700"
+                          disabled={isLoading.unstake || !unstakeAmount}
+                        >
+                          {isLoading.unstake ? 'Processing...' : 'Unstake RIFT'}
+                        </Button>
+                      </form>
+                    </TabsContent>
+                  </Tabs>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

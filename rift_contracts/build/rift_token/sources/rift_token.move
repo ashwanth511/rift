@@ -76,7 +76,13 @@ module rift_token::rift_token {
 
     public struct BetPlacedEvent has copy, drop {
         player: address,
-        amount: u64
+        amount: u64,
+        game_type: u8  // 1: CyberBattle, 2: MemoryGame, 3: TicTacToe
+    }
+
+    public struct GameResultEvent has copy, drop {
+        player: address,
+        timestamp: u64
     }
 
     // Error codes
@@ -85,14 +91,26 @@ module rift_token::rift_token {
     const ERR_TOO_EARLY_TO_CLAIM: u64 = 2;
     const ERR_INVALID_BET_AMOUNT: u64 = 3;
     const ERR_INSUFFICIENT_POOL_BALANCE: u64 = 4;
+    const ERR_INVALID_GAME_TYPE: u64 = 5;
 
     // Constants
-    const CREATOR_ALLOCATION: u64 = 20_000_000_000; // 2% of total supply
-    const POOL_ALLOCATION: u64 = 980_000_000_000; // 98% of total supply
+    // Total supply = 1 billion RIFT (with 9 decimals)
+    const TOTAL_SUPPLY: u64 = 1_000_000_000_000_000_000; // 1 billion RIFT
+    const CREATOR_ALLOCATION: u64 = 20_000_000_000_000_000; // 2% of total supply (20 million RIFT)
+    const POOL_ALLOCATION: u64 = 980_000_000_000_000_000; // 98% of total supply (980 million RIFT)
     const DECIMALS: u8 = 9;
     const DAILY_REWARDS_RATE: u64 = 1_000_000; // 1 RIFT per day per staked token
     const MIN_STAKE_DURATION: u64 = 86400; // 24 hours in seconds
     const RIFT_PRICE_IN_SUI: u64 = 10_000_000; // 0.01 SUI per RIFT
+    const MIN_BET_AMOUNT: u64 = 100_000_000; // 0.1 RIFT
+    const BURN_PERCENTAGE: u64 = 50; // 50% burn on loss
+    const LIQUIDITY_PERCENTAGE: u64 = 50; // 50% to liquidity on loss
+    const REWARD_MULTIPLIER: u64 = 2; // 2x reward on win
+
+    // Game types
+    const GAME_CYBER_BATTLE: u8 = 1;
+    const GAME_MEMORY: u8 = 2;
+    const GAME_TIC_TAC_TOE: u8 = 3;
 
     fun init(witness: RIFT_TOKEN, ctx: &mut TxContext) {
         // Create the Rift coin with metadata and image
@@ -102,7 +120,7 @@ module rift_token::rift_token {
             b"RIFT",
             b"Rift Token",
             b"The native token of the Rift ecosystem - A revolutionary gaming and DeFi token",
-            option::some(url::new_unsafe_from_bytes(b"https://rifttoken.com/logo.png")), // Replace with actual token image URL
+            option::some(url::new_unsafe_from_bytes(b"https://blue-static-marlin-360.mypinata.cloud/ipfs/bafkreics5rhqqtgtnyquvqx2j2wxks2wyiszsxmgdrll3u6ujndoldlg3y")), // Replace with actual token image URL
             ctx
         );
 
@@ -273,11 +291,21 @@ module rift_token::rift_token {
     // Place bet for games
     public entry fun place_bet(
         pool: &mut BettingPool,
+        liquidity_pool: &mut LiquidityPool,
         rift_coins: Coin<RIFT_TOKEN>,
+        game_type: u8,
         ctx: &mut TxContext
     ) {
+        // Verify game type is valid
+        assert!(
+            game_type == GAME_CYBER_BATTLE || 
+            game_type == GAME_MEMORY || 
+            game_type == GAME_TIC_TAC_TOE,
+            ERR_INVALID_GAME_TYPE
+        );
+
         let amount = coin::value(&rift_coins);
-        assert!(amount > 0, ERR_INVALID_BET_AMOUNT);
+        assert!(amount >= MIN_BET_AMOUNT, ERR_INVALID_BET_AMOUNT);
 
         // Transfer bet amount to pool
         balance::join(&mut pool.pool_balance, coin::into_balance(rift_coins));
@@ -285,53 +313,49 @@ module rift_token::rift_token {
         // Emit bet placed event
         event::emit(BetPlacedEvent {
             player: tx_context::sender(ctx),
-            amount
+            amount,
+            game_type
         });
     }
 
-    // Process game result (called by authorized game contracts only)
-    public entry fun process_game_result(
-        registry: &GameRegistry,
+    // Handle game result and distribute rewards/burns
+    public entry fun handle_game_result(
         pool: &mut BettingPool,
+        _liquidity_pool: &mut LiquidityPool,
+        treasury_cap: &mut TreasuryCap<RIFT_TOKEN>,
         player: address,
+        amount: u64,
         won: bool,
-        bet_amount: u64,
         ctx: &mut TxContext
     ) {
-        // Verify the caller is an authorized game
-        let caller = tx_context::sender(ctx);
-        assert!(vector::contains(&registry.authorized_games, &caller), ERR_UNAUTHORIZED_GAME);
+        let reward_amount = if (won) { amount * REWARD_MULTIPLIER } else { 0 };
+        let burned_amount = if (!won) { (amount * BURN_PERCENTAGE) / 100 } else { 0 };
+        let liquidity_amount = if (!won) { (amount * LIQUIDITY_PERCENTAGE) / 100 } else { 0 };
 
         if (won) {
-            // Player won - transfer winnings
-            let winning_coins = coin::from_balance(balance::split(&mut pool.pool_balance, bet_amount * 2), ctx);
-            transfer::public_transfer(winning_coins, player);
+            let reward_coins = coin::from_balance(
+                balance::split(&mut pool.pool_balance, reward_amount),
+                ctx
+            );
+            transfer::public_transfer(reward_coins, player);
         } else {
-            // Player lost - burn 50% and add 50% to pool
-            let lost_amount = bet_amount / 2;
-            let burn_coins = coin::from_balance(balance::split(&mut pool.pool_balance, lost_amount), ctx);
-            transfer::public_transfer(burn_coins, pool.burn_address);
-        }
-    }
+            let burn_coins = coin::from_balance(
+                balance::split(&mut pool.pool_balance, burned_amount),
+                ctx
+            );
+            coin::burn<RIFT_TOKEN>(treasury_cap, burn_coins);
 
-    // Helper functions for battle system
-    public fun mint_battle_reward(
-        pool: &mut LiquidityPool,
-        amount: u64,
-        ctx: &mut TxContext
-    ): Coin<RIFT_TOKEN> {
-        coin::from_balance(balance::split(&mut pool.pool_balance, amount), ctx)
-    }
+            let liquidity_coins = coin::from_balance(
+                balance::split(&mut pool.pool_balance, liquidity_amount),
+                ctx
+            );
+            balance::join(&mut _liquidity_pool.pool_balance, coin::into_balance(liquidity_coins));
+        };
 
-    public fun burn_battle_loss(
-        pool: &mut LiquidityPool,
-        amount: u64,
-        ctx: &mut TxContext
-    ) {
-        let burn_amount = amount / 2;  // 50% burn
-        coin::burn(
-            &mut pool.treasury_cap,
-            coin::from_balance(balance::split(&mut pool.pool_balance, burn_amount), ctx)
-        );
+        let game_event = GameResultEvent {
+            player,
+            timestamp: tx_context::epoch(ctx)
+        };
+        event::emit(game_event);
     }
 }

@@ -6,7 +6,7 @@ interface Game {
   id: string;
   title: string;
   description: string;
-  image: string;
+
   rewards: {
     xp: number;
     tokens: number;
@@ -23,53 +23,14 @@ const GamePage = () => {
   const navigate = useNavigate();
 
   const games: Game[] = [
+   
+   
+  
     {
       id: '1',
-      title: 'Cyber Arena Battle',
-      description: 'Battle against other players using your cyber agents in real-time combat',
-      image: '/games/battle.jpg',
-      rewards: {
-        xp: 500,
-        tokens: 100,
-        items: ['Rare Agent Skin', 'Power Core']
-      },
-      type: 'battle',
-      difficulty: 'medium',
-      timeEstimate: '10-15 min'
-    },
-    {
-      id: '2',
-      title: 'Neural Quest',
-      description: 'Complete missions in the virtual world to earn rewards and level up your agents',
-      image: '/games/quest.jpg',
-      rewards: {
-        xp: 300,
-        tokens: 50,
-        items: ['Agent Module', 'Energy Cell']
-      },
-      type: 'quest',
-      difficulty: 'easy',
-      timeEstimate: '5-10 min'
-    },
-    {
-      id: '3',
-      title: 'Grand Cyber Tournament',
-      description: 'Join the weekly tournament to compete for massive rewards and glory',
-      image: '/games/tournament.jpg',
-      rewards: {
-        xp: 1000,
-        tokens: 500,
-        items: ['Legendary Agent', 'Tournament Trophy']
-      },
-      type: 'tournament',
-      difficulty: 'hard',
-      timeEstimate: '30-45 min'
-    },
-    {
-      id: '4',
       title: 'Cyber Tic-Tac-Toe',
       description: 'Classic game reinvented for the digital age. Challenge your strategic thinking!',
-      image: '/games/tictactoe.jpg',
+
       rewards: {
         xp: 200,
         tokens: 50,
@@ -77,13 +38,14 @@ const GamePage = () => {
       },
       type: 'battle',
       difficulty: 'easy',
-      timeEstimate: '5-10 min'
+      timeEstimate: '5-10 min',
+    
     },
     {
-      id: '5',
+      id: '2',
       title: 'Cyber Memory',
       description: 'Test your memory skills by matching cyber symbols in this engaging puzzle game',
-      image: '/games/memory.jpg',
+
       rewards: {
         xp: 300,
         tokens: 75,
@@ -91,13 +53,14 @@ const GamePage = () => {
       },
       type: 'quest',
       difficulty: 'medium',
-      timeEstimate: '10-15 min'
+      timeEstimate: '10-15 min',
+    
     },
     {
-      id: '6',
+      id: '3',
       title: 'Cyber Battle',
       description: 'Engage in strategic combat using cyber abilities against an intelligent AI opponent',
-      image: '/games/battle.jpg',
+
       rewards: {
         xp: 500,
         tokens: 150,
@@ -105,7 +68,8 @@ const GamePage = () => {
       },
       type: 'battle',
       difficulty: 'medium',
-      timeEstimate: '10-15 min'
+      timeEstimate: '10-15 min',
+   
     }
   ];
 
@@ -167,11 +131,7 @@ const GamePage = () => {
             <div className="relative bg-zinc-800/50 border border-zinc-700/50 backdrop-blur-sm rounded-lg overflow-hidden">
               {/* Game Image */}
               <div className="relative h-48">
-                <img 
-                  src={game.image} 
-                  alt={game.title}
-                  className="w-full h-full object-cover"
-                />
+               
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                 
                 {/* Game Type Badge */}
@@ -235,10 +195,11 @@ const GamePage = () => {
                 {/* Play Button */}
                 <button 
                   onClick={() => {
-                    if (game.id === '4') navigate('/tictactoe');
-                    else if (game.id === '5') navigate('/memory');
-                    else if (game.id === '6') navigate('/cyberbattle');
+                    if (game.id === '1') navigate('/tictactoe');
+                    else if (game.id === '2') navigate('/memory');
+                    else if (game.id === '3') navigate('/cyberbattle');
                   }}
+
                   className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-400 rounded-lg font-bold text-white transform transition-all duration-300 hover:scale-[1.02] hover:from-purple-500 hover:to-purple-300"
                 >
                   Play Now

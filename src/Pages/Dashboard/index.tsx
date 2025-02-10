@@ -1,190 +1,185 @@
-import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React from 'react';
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
-import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 
-interface TokenCard {
+interface NFT {
   id: string;
   name: string;
-  symbol: string;
-  price: number;
-  change24h: number;
-  marketCap: string;
-  volume: string;
-  image: string;
+  description: string;
+  imageUrl: string;
+  traits: string[];
+  psycheScore: number;
+  battles: number;
+  wins: number;
 }
 
-const generateMiniChartData = () => {
-  const data = [];
-  let price = 100;
-  
-  for (let i = 0; i < 20; i++) {
-    price = price + (Math.random() - 0.5) * 10;
-    data.push({ value: price });
+const dummyNFTs = [
+  {
+    id: "0x123456789",
+    name: "Pikachu Agent",
+    description: "An electric mouse agent with shocking abilities.",
+    imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png",
+    traits: ["Electric", "Mouse", "Cute"],
+    psycheScore: 89,
+    battles: 45,
+    wins: 38
+  },
+  {
+    id: "0x987654321",
+    name: "Charizard Agent",
+    description: "A fire-breathing agent ready to incinerate the competition.",
+    imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/6.png",
+    traits: ["Fire", "Flying", "Lethal"],
+    psycheScore: 92,
+    battles: 32,
+    wins: 29
+  },
+  {
+    id: "0xabcdef123",
+    name: "Blastoise Agent",
+    description: "A water-type agent with powerful hydro cannons.",
+    imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/9.png",
+    traits: ["Water", "Shell", "Tank"],
+    psycheScore: 95,
+    battles: 28,
+    wins: 25
+  },
+  {
+    id: "0x456def789",
+    name: "Venusaur Agent",
+    description: "A grass-type agent with poisonous vines and solar power.",
+    imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/3.png",
+    traits: ["Grass", "Poison", "Nature"],
+    psycheScore: 88,
+    battles: 52,
+    wins: 41
+  },
+  {
+    id: "0x789abc456",
+    name: "Gengar Agent",
+    description: "A ghost-type agent with spooky tricks and shadow powers.",
+    imageUrl: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/94.png",
+    traits: ["Ghost", "Poison", "Shadow"],
+    psycheScore: 91,
+    battles: 37,
+    wins: 33
   }
-  
-  return data;
-};
-
-const mockTokens: TokenCard[] = [
-  {
-    id: '1',
-    name: 'Pikachu Token',
-    symbol: 'PIKA',
-    price: 0.05,
-    change24h: 12.5,
-    marketCap: '$1.2M',
-    volume: '$250K',
-    image: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png'
-  },
-  {
-    id: '2',
-    name: 'Charizard Token',
-    symbol: 'CHAR',
-    price: 2.45,
-    change24h: -3.2,
-    marketCap: '$5.6M',
-    volume: '$890K',
-    image: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/6.png'
-  },
-  // Add more mock tokens as needed
 ];
 
-const TokenCard = ({ token }: { token: TokenCard }) => {
+const DashboardPage = () => {
   const navigate = useNavigate();
-  const chartData = generateMiniChartData();
-  const isPositiveChange = token.change24h >= 0;
 
-  const handleTokenClick = () => {
-    navigate(`/token-view/${token.id}`);
+  const handleCreateNFT = () => {
+    navigate('/launch');
+  };
+
+  const handleStartBattle = () => {
+    navigate('/battle');
   };
 
   return (
-    <Card 
-      className="relative overflow-hidden  group hover:scale-[1.02] transition-all duration-300 bg-zinc-900 border-[#00B4FF] cursor-pointer flex flex-row"
-      onClick={handleTokenClick}
-    >
-      <div className="p-6 relative  z-10 flex-1">
-        <div className="flex items-start gap-6">
-          <img 
-            src={token.image} 
-            alt={token.name}
-            className="w-16 h-16 object-contain filter brightness-0 invert opacity-80"
-          />
-          <div className="flex-1">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="text-xl font-bold text-white">{token.name}</h3>
-                <p className="text-zinc-400 text-sm">{token.symbol}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-lg font-bold text-white">${token.price.toLocaleString()}</p>
-                <p className={`text-sm font-medium ${isPositiveChange ? 'text-green-400' : 'text-red-400'}`}>
-                  {isPositiveChange ? '+' : ''}{token.change24h}%
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-zinc-400 text-white">Market Cap</span>
-                <span className="text-white font-medium">{token.marketCap}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-zinc-400 text-white">Volume (24h)</span>
-                <span className="text-white font-medium">{token.volume}</span>
-              </div>
- 
-            </div>
-          
+    <div className="min-h-screen bg-gradient-to-b from-zinc-900 to-black mt-[5%] p-6">
+      {/* Header */}
+      <div className="max-w-7xl mx-auto mb-8">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">Your NFT Collection</h1>
+            <p className="text-zinc-400">Create, battle, and trade your AI agents</p>
+          </div>
+          <div className="flex gap-4">
+            <Button
+              onClick={handleCreateNFT}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              Create NFT
+            </Button>
+            <Button
+              onClick={handleStartBattle}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Start Battle
+            </Button>
           </div>
         </div>
       </div>
-      <div className="flex-none h-full w-40 mt-4 flex items-center justify-center">
-        <div className="h-16 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData}>
-              <defs>
-                <linearGradient id={`gradient-${token.id}`} x1="100" y1="0" x2="0" y2="1">
-                  <stop 
-                    offset="5%" 
-                    stopColor={isPositiveChange ? '#22c55e' : '#ef4444'} 
-                    stopOpacity={0.3}
+
+      {/* NFT Grid */}
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {dummyNFTs.map((nft) => (
+            <Card 
+              key={nft.id}
+              className="bg-zinc-900 border-zinc-800 overflow-hidden group hover:border-purple-500/50 transition-all duration-300"
+            >
+              <div className="relative">
+                <div className="aspect-square bg-gradient-to-br from-purple-900/20 to-purple-600/20">
+                  <img 
+                    src={nft.imageUrl} 
+                    alt={nft.name}
+                    className="w-full h-full object-cover"
                   />
-                  <stop 
-                    offset="95%" 
-                    stopColor={isPositiveChange ? '#22c55e' : '#ef4444'} 
-                    stopOpacity={0}
-                  />
-                </linearGradient>
-              </defs>
-              <Area
-                type="monotone"
-                dataKey="value"
-                stroke={isPositiveChange ? '#22c55e' : '#ef4444'}
-                fill={`url(#gradient-${token.id})`}
-                strokeWidth={1.5}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+                </div>
+                <div className="absolute top-4 right-4">
+                  <div className="px-3 py-1 rounded-full bg-purple-900/80 backdrop-blur-sm text-purple-200 text-sm border border-purple-500/30">
+                    #{nft.id.slice(0, 6)}
+                  </div>
+                </div>
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-white mb-2">{nft.name}</h3>
+                <p className="text-zinc-400 text-sm mb-4">{nft.description}</p>
+                
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-4 mb-4">
+                  <div className="text-center p-2 rounded-lg bg-zinc-800/50">
+                    <div className="text-2xl font-bold text-purple-400">{nft.psycheScore}</div>
+                    <div className="text-xs text-zinc-500">Psyche</div>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-zinc-800/50">
+                    <div className="text-2xl font-bold text-blue-400">{nft.battles}</div>
+                    <div className="text-xs text-zinc-500">Battles</div>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-zinc-800/50">
+                    <div className="text-2xl font-bold text-green-400">{nft.wins}</div>
+                    <div className="text-xs text-zinc-500">Wins</div>
+                  </div>
+                </div>
+
+                {/* Traits */}
+                <div className="flex flex-wrap gap-2">
+                  {nft.traits.map((trait, idx) => (
+                    <span 
+                      key={idx}
+                      className="px-2 py-1 text-xs rounded-full bg-purple-900/30 text-purple-300 border border-purple-500/20"
+                    >
+                      {trait}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Actions */}
+                <div className="mt-4 grid grid-cols-2 gap-4">
+                  <Button
+                    onClick={() => navigate(`/battle?nft=${nft.id}`)}
+                    className="w-full bg-purple-600 hover:bg-purple-700"
+                  >
+                    Battle
+                  </Button>
+                  <Button
+                    onClick={() => navigate(`/trade?nft=${nft.id}`)}
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                  >
+                    Trade
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
         </div>
-      </div>
-    </Card>
-  );
-};
-
-const Dashboard = () => {
-  return (
-    <div className="min-h-screen bg-black text-white p-8">
-      <div className="max-w-[1200px] mx-auto">
-        <h1 className="text-4xl font-bold mt-[5%] mb-8 text-blue-500">
-          Dashboard
-        </h1>
-
-        <Tabs defaultValue="pool" className="w-full">
-          <TabsList className="w-full bg-zinc-900 p-1 rounded-xl mb-8 border border-zinc-800">
-            <TabsTrigger 
-              value="pool" 
-              className="w-1/3 py-3 data-[state=active]:bg-zinc-800 data-[state=active]:text-blue-500 rounded-lg transition-all"
-            >
-              Tokens in Pool
-            </TabsTrigger>
-            <TabsTrigger 
-              value="listed" 
-              className="w-1/3 py-3 data-[state=active]:bg-zinc-800 data-[state=active]:text-blue-500 rounded-lg transition-all"
-            >
-              Listed Tokens
-            </TabsTrigger>
-            <TabsTrigger 
-              value="new" 
-              className="w-1/3 py-3 data-[state=active]:bg-zinc-800 data-[state=active]:text-blue-500 rounded-lg transition-all"
-            >
-              Newly Launched
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="pool" className="mt-0 space-y-4">
-            {mockTokens.map(token => (
-              <TokenCard key={token.id} token={token} />
-            ))}
-          </TabsContent>
-
-          <TabsContent value="listed" className="mt-0 space-y-4">
-            {mockTokens.map(token => (
-              <TokenCard key={token.id} token={token} />
-            ))}
-          </TabsContent>
-
-          <TabsContent value="new" className="mt-0 space-y-4">
-            {mockTokens.map(token => (
-              <TokenCard key={token.id} token={token} />
-            ))}
-          </TabsContent>
-        </Tabs>
       </div>
     </div>
   );
 };
 
-export default Dashboard;
+export default DashboardPage;

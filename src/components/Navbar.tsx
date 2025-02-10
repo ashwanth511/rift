@@ -56,7 +56,7 @@ const Navbar = () => {
                 onClick={() => navigate('/trading')}
                 className="text-zinc-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
-                Trading
+                Trade
               </button>
 
             </div>
